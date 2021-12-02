@@ -1,2 +1,1 @@
-let day = Day02()
-day.executeWholeDay()
+Day03().executeWholeDay()

@@ -8,11 +8,8 @@ class Day01 : Day {
 
     func scanMeasurements(andCountSubsequentIncreasingSumsOf elementCount: Int) -> String {
         let mapped = stride(from: 0, to: measurements.count - elementCount, by: 1)
-            .map { measurements[$0...($0 + elementCount)] }
-        let count = mapped
-            .filter { $0.prefix($0.count - 1).reduce(0, +) < $0.suffix($0.count - 1).reduce(0, +) }
-            .count
-        return String(count)
+            .map({ (prev: measurements[$0], next: measurements[$0 + elementCount]) })
+        return String(mapped.filter({ $0.prev < $0.next }).count)
     }
 
     func taskZeroLogic() -> String { scanMeasurements(andCountSubsequentIncreasingSumsOf: 1) }
