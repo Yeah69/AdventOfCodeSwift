@@ -1,1 +1,1 @@
-Day03().executeWholeDay()
+Day04().executeWholeDay()
