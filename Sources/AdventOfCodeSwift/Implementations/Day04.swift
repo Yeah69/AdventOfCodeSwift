@@ -34,7 +34,7 @@ class Day04 : Day {
         init(_ values: [Int]) {
             all = values.map { BoardNumber($0) }
             rows = all.chunked(into: 5)
-            columns = stride(from: 0, to: 5, by: 1).map{ Array(stride(from: $0, through: 24, by: 5).map { index in all[index] }) }
+            columns = stride(from: 0, through: 4, by: 1).map{ Array(stride(from: $0, through: 24, by: 5).map { index in all[index] }) }
         }
 
         func check(_ number: Int) -> Int? {
