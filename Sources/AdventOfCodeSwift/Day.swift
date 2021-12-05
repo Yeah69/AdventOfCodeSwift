@@ -15,7 +15,7 @@ extension Day {
         let timeInMillis = stopTimeWhileExecuting(task: { answer = taskLogic() })
         print("Answer \(tasklabel) =")
         print(answer)
-        print("(The task took \(timeInMillis) ms)")
+        print("(The task took \(timeInMillis) s)")
         print()
     }
 
@@ -33,7 +33,7 @@ extension Day {
             taskZeroExecution()
             taskOneExecution()
         })
-        print("(The day \(label) took \(timeInMillis) ms in total)")
+        print("(The day \(label) took \(timeInMillis) s in total)")
     }
 
     func stopTimeWhileExecuting(task taskLogic: () -> ()) -> TimeInterval {
