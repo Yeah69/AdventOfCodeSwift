@@ -21,6 +21,7 @@ class Day22 : Day {
             }
     }()
 
+
     func taskZeroLogic() -> String { 
         var onPoints : Set<String> = Set()
         let filteredData = data.filter { 
@@ -43,86 +44,80 @@ class Day22 : Day {
         }
         return String(onPoints.count) 
     }
+    
     func taskOneLogic() -> String { 
-        func cuts(cutted: ((Int64, Int64), (Int64, Int64), (Int64, Int64)), cutter: ((Int64, Int64), (Int64, Int64), (Int64, Int64))) -> Bool {
-            ((cutter.0.0 >= cutted.0.0 && cutter.0.0 <= cutted.0.1) || (cutter.0.1 >= cutted.0.0 && cutter.0.1 <= cutted.0.1))
-            && ((cutter.1.0 >= cutted.1.0 && cutter.1.0 <= cutted.1.1) || (cutter.1.1 >= cutted.1.0 && cutter.1.1 <= cutted.1.1))
-            && ((cutter.2.0 >= cutted.2.0 && cutter.2.0 <= cutted.2.1) || (cutter.2.1 >= cutted.2.0 && cutter.2.1 <= cutted.2.1))
-        }
+        func getIntervals(dataGetter: ((Bool, (Int64, Int64), (Int64, Int64), (Int64, Int64))) -> (Int64, Int64)) -> [(Int64, Int64)] {
+            let gotData = data.map(dataGetter)
 
-        func subIntervalls(of: (Int64, Int64), cuttedBy: (Int64, Int64)) -> ((Int64, Int64), (Int64, Int64)) {
-            if cuttedBy.0 < of.0 {
-                return ((of.0, cuttedBy.1), (cuttedBy.1 + 1, of.1))
-            }
-            return ((of.0, cuttedBy.0 - 1), (cuttedBy.0, of.1))
-        }
+            let min = gotData.map { $0.0 }.min() ?? Int64.min
+            let max = gotData.map { $0.1 }.max() ?? Int64.max
+        
+            var intervals: [(Int64, Int64)] = [(min, max)]
 
-        var onCuboids : [((Int64, Int64), (Int64, Int64), (Int64, Int64))] = []
-        for (on, xRange, yRange, zRange) in data.prefix(3) {
-            if on {
-                var queue: Queue<((Int64, Int64), (Int64, Int64), (Int64, Int64))> = Queue()
-                queue.enqueue((xRange, yRange, zRange))
-                while let currentCuboid = queue.dequeue() {
-                    if let firstCut = onCuboids.first(where: { cuts(cutted: $0, cutter: currentCuboid)}) {
-                        print("\(currentCuboid) cuts \(firstCut)")
-                        if currentCuboid.0.0 >= firstCut.0.0 && currentCuboid.0.1 <= firstCut.0.1
-                            && currentCuboid.1.0 >= firstCut.1.0 && currentCuboid.1.1 <= firstCut.1.1
-                            && currentCuboid.2.0 >= firstCut.2.0 && currentCuboid.2.1 <= firstCut.2.1 {
-                            print("cutter completely contained")
-                            continue // currentCuboid is contained completely
-                        }
-                        let newXIntervalls = subIntervalls(of: currentCuboid.0, cuttedBy: firstCut.0)
-                        print("newXIntervalls \(newXIntervalls)")
-                        let newYIntervalls = subIntervalls(of: currentCuboid.1, cuttedBy: firstCut.1)
-                        print("newYIntervalls \(newYIntervalls)")
-                        let newZIntervalls = subIntervalls(of: currentCuboid.2, cuttedBy: firstCut.2)
-                        print("newZIntervalls \(newZIntervalls)")
-                        queue.enqueue((newXIntervalls.0, newYIntervalls.0, newZIntervalls.0))
-                        queue.enqueue((newXIntervalls.0, newYIntervalls.0, newZIntervalls.1))
-                        queue.enqueue((newXIntervalls.0, newYIntervalls.1, newZIntervalls.0))
-                        queue.enqueue((newXIntervalls.0, newYIntervalls.1, newZIntervalls.1))
-                        queue.enqueue((newXIntervalls.1, newYIntervalls.0, newZIntervalls.0))
-                        queue.enqueue((newXIntervalls.1, newYIntervalls.0, newZIntervalls.1))
-                        queue.enqueue((newXIntervalls.1, newYIntervalls.1, newZIntervalls.0))
-                        queue.enqueue((newXIntervalls.1, newYIntervalls.1, newZIntervalls.1))
-                    }
-                    else {
-                        print("appending \(currentCuboid)")
-                        onCuboids.append(currentCuboid)
-                    }
+            for datum in gotData {
+                var i = intervals.count - 1
+                while intervals[i].0 > datum.0 {
+                    i -= 1
+                }
+                if intervals[i].0 < datum.0 {
+                    let toSplit = intervals[i]
+                    intervals.insert((datum.0, toSplit.1), at: i + 1)
+                    intervals.insert((toSplit.0, datum.0 - 1), at: i + 1)
+                    intervals.remove(at: i)
+                }
+                i = 0
+                while intervals[i].1 < datum.1 {
+                    i += 1
+                }
+                if intervals[i].1 > datum.1 {
+                    let toSplit = intervals[i]
+                    intervals.insert((toSplit.0, datum.1), at: i)
+                    intervals.insert((datum.1 + 1, toSplit.1), at: i + 1)
+                    intervals.remove(at: i + 2)
                 }
             }
-            else {
-                var queue: Queue<((Int64, Int64), (Int64, Int64), (Int64, Int64))> = Queue()
-                queue.enqueue((xRange, yRange, zRange))
-                while !queue.isEmpty {
-                    let currentCuboid = queue.dequeue()!
-                    if let firstCut = onCuboids.first(where: { cuts(cutted: currentCuboid, cutter: $0)}) {
-                        onCuboids.remove(at: onCuboids.firstIndex(where: { 
-                            $0.0.0 == firstCut.0.0 && $0.0.1 == firstCut.0.1
-                            && $0.1.0 == firstCut.1.0 && $0.1.1 == firstCut.1.1
-                            && $0.2.0 == firstCut.2.0 && $0.2.1 == firstCut.2.1  })!)
-                        if firstCut.0.0 >= currentCuboid.0.0 && firstCut.0.1 <= currentCuboid.0.1
-                            && firstCut.1.0 >= currentCuboid.1.0 && firstCut.1.1 <= currentCuboid.1.1
-                            && firstCut.2.0 >= currentCuboid.2.0 && firstCut.2.1 <= currentCuboid.2.1 {
-                            continue // currentCuboid is contained completely
+            return intervals
+        }
+
+        let xIntervals = getIntervals { $0.1 }
+        let yIntervals = getIntervals { $0.2 }
+        let zIntervals = getIntervals { $0.3 }
+
+        var onSections : Set<Key> = Set()
+
+        for (on, xRange, yRange, zRange) in data {
+            if let xStart = xIntervals.firstIndex(where: { $0.0 == xRange.0 }), let xEnd = xIntervals.lastIndex(where: { $0.1 == xRange.1 }),
+               let yStart = yIntervals.firstIndex(where: { $0.0 == yRange.0 }), let yEnd = yIntervals.lastIndex(where: { $0.1 == yRange.1 }),
+               let zStart = zIntervals.firstIndex(where: { $0.0 == zRange.0 }), let zEnd = zIntervals.lastIndex(where: { $0.1 == zRange.1 }) {
+                for x in xStart ... xEnd {
+                    for y in yStart ... yEnd {
+                        for z in zStart ... zEnd {
+                            if on {
+                                onSections.insert(Key(x, y, z))
+                            }
+                            else {
+                                onSections.remove(Key(x, y, z))
+                            }
                         }
-                        let newXIntervalls = subIntervalls(of: firstCut.0, cuttedBy: currentCuboid.0)
-                        let newYIntervalls = subIntervalls(of: firstCut.1, cuttedBy: currentCuboid.1)
-                        let newZIntervalls = subIntervalls(of: firstCut.2, cuttedBy: currentCuboid.2)
-                        onCuboids.append((newXIntervalls.0, newYIntervalls.0, newZIntervalls.0))
-                        onCuboids.append((newXIntervalls.0, newYIntervalls.0, newZIntervalls.1))
-                        onCuboids.append((newXIntervalls.0, newYIntervalls.1, newZIntervalls.0))
-                        onCuboids.append((newXIntervalls.0, newYIntervalls.1, newZIntervalls.1))
-                        onCuboids.append((newXIntervalls.1, newYIntervalls.0, newZIntervalls.0))
-                        onCuboids.append((newXIntervalls.1, newYIntervalls.0, newZIntervalls.1))
-                        onCuboids.append((newXIntervalls.1, newYIntervalls.1, newZIntervalls.0))
-                        onCuboids.append((newXIntervalls.1, newYIntervalls.1, newZIntervalls.1))
-                        queue.enqueue(currentCuboid)
                     }
                 }
             }
         }
-        return String(onCuboids.count) 
+
+        let ret: [UInt64] = onSections.map { UInt64(xIntervals[$0.x].1 - xIntervals[$0.x].0 + 1) * UInt64(yIntervals[$0.y].1 - yIntervals[$0.y].0 + 1) * UInt64(zIntervals[$0.z].1 - zIntervals[$0.z].0 + 1) }
+
+        return String(ret.reduce(UInt64(0), +))
+    }
+
+    struct Key: Hashable {
+        var x: Int
+        var y: Int 
+        var z: Int
+
+        init(_ x: Int, _ y: Int, _ z: Int) {
+            self.x = x
+            self.y = y
+            self.z = z
+        }
     }
 }
